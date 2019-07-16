@@ -50,6 +50,10 @@ def alignImages(im1, im2):
 
   return im1Reg, h, imMatches
 
+
+
+
+
 ###############################################################################################
 #################################         INTERFACE       #####################################
 #Working folder path:
@@ -61,7 +65,6 @@ final_folder = 'aligned_images'
 matches_folder = 'feature_matches'
 
 #Image names & prefixes
-align_prefix = 'align'
 final_prefix = 'final'
 match_prefix = 'match'
 reference_name = 'reference_image.jpg'
@@ -71,24 +74,34 @@ reference_name = 'reference_image.jpg'
 
 
 
-# Locate the imagery folders and the reference image
+# Locate and count the imagery to align
 os.chdir(userPath)
 onlyfiles = [f for f in os.listdir(align_folder) if os.path.isfile(os.path.join(align_folder, f))]
-print(format(len(onlyfiles)),'images to align.')
-imReference = cv2.imread(reference_name, cv2.IMREAD_COLOR)
+print(format(len(onlyfiles)),'detected images to align.')
 imnum=0
+
+# Create target directories if they don't exist yet
+if not os.path.exists(final_folder):
+    os.mkdir(final_folder)
+if not os.path.exists(matches_folder):
+    os.mkdir(matches_folder)
+
+#Read the reference image
+imReference = cv2.imread(reference_name, cv2.IMREAD_COLOR)
+
 
 for image_to_align in onlyfiles:
 
     imnum+=1
 
     # Read image to be aligned
-    imaPath = align_folder+'/'+align_prefix+str(imnum)+'.jpg'
+    imaPath = align_folder+'/'+image_to_align
     im = cv2.imread(imaPath, cv2.IMREAD_COLOR)
 
-    #Align images with ORB homography
+    #Align images with ORB and report homography
     print("Aligning image", image_to_align)
     imReg, h, feat_matches = alignImages(im, imReference)
+    print("Estimated homography for the current image : \n",  h)
 
     # Write aligned image to disk.
     outFilename = final_folder+'/'+final_prefix+str(imnum)+'.png'
@@ -98,15 +111,10 @@ for image_to_align in onlyfiles:
     matchFilename = matches_folder+'/'+match_prefix+str(imnum)+'.png'
     cv2.imwrite(matchFilename, feat_matches)
 
-    # Print estimated homography
-    print("Estimated homography for the current image : \n",  h)
-
-
+    #Showing the input and output images. Comment out this section when not needed.
     cv2.imshow('Reference image', imReference)
     cv2.imshow('Image to align', im)
     cv2.imshow('Final image',imReg)
-
-
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    cv2.imshow('Feature matches',feat_matches)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
